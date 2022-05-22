@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block team.html %}
+
+<!DOCTYPE html>
+<html lang="en">
+ <body>
+  <!-- ======= Header ======= -->
+  <!--==== extended from base.html ====--->
+  <!-- End Header -->
+  <main id="main">
+   <!-- ======= Breadcrumbs ======= -->
+   {% includes 'partials/breadcrumbs.html'  %}
+   <!-- End Breadcrumbs -->
+   <!-- ======= Our Team Section ======= -->
+   {% includes 'partials/team.html'  %}
+   <!-- End Our Team Section -->
+  </main>
+  <!-- End #main -->
+  <!-- ======= Footer ======= -->
+  <!--==== extended from base.html ====--->
+  <!-- End Footer -->
+  <a class="back-to-top d-flex align-items-center justify-content-center" href="#">
+   <i class="bi bi-arrow-up-short">
+   </i>
+  </a>
+  <!-- Vendor JS Files -->
+  <!-- Template Main JS File -->
+ </body>
+</html>
+
+{% endblock %

@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block index.html %}
+
+<!DOCTYPE html>
+<html lang="en">
+ <body>
+  <!-- ======= Header ======= -->
+  <!--==== extended from base.html ====--->
+  <!-- End Header -->
+  <!-- ======= Hero Section ======= -->
+  {% includes 'partials/hero.html'  %}
+  <!-- End Hero -->
+  <main id="main">
+   <!-- ======= About Us Section ======= -->
+   {% includes 'partials/about-us.html'  %}
+   <!-- End About Us Section -->
+   <!-- ======= Services Section ======= -->
+   {% includes 'partials/services.html'  %}
+   <!-- End Services Section -->
+   <!-- ======= Portfolio Section ======= -->
+   {% includes 'partials/portfolio.html'  %}
+   <!-- End Portfolio Section -->
+   <!-- ======= Our Clients Section ======= -->
+   {% includes 'partials/clients.html'  %}
+   <!-- End Our Clients Section -->
+  </main>
+  <!-- End #main -->
+  <!-- ======= Footer ======= -->
+  <!--==== extended from base.html ====--->
+  <!-- End Footer -->
+  <a class="back-to-top d-flex align-items-center justify-content-center" href="#">
+   <i class="bi bi-arrow-up-short">
+   </i>
+  </a>
+  <!-- Vendor JS Files -->
+  <!-- Template Main JS File -->
+ </body>
+</html>
+
+{% endblock %
