@@ -2,7 +2,7 @@ import os
 extends_base = "{% extends 'base.html' %}\n\n"
 load_static = "{% load static %}\n\n"
 start_block = "{% block index %}\n\n"
-endblock = "\n\n{% endblock %"
+endblock = "\n\n{% endblock %}"
 include_start = "{% includes"
 include_end = " %}"
 
@@ -11,7 +11,7 @@ def block(html_page):
 	"""creates "template block with html string""" 
 	start_block = "{% block "
 	end_block =  " %}"
-	block = f"{start_block}{html_page}{end_block}\n\n"
+	block = f"{start_block}{html_page}{end_block}\n"
 	return block
 
 
@@ -59,4 +59,29 @@ def file_helper(files):
 		files = [str(files)]
 	if files[0].endswith("html") == False:
 		files = [ file+".html" for file in files ]
-	return files		
+	return files
+
+
+def get_static_link(file, folder):
+	start = '"{% '
+	end = ' %}"'
+	middle = f"static '{folder}/{file}'"
+	return start+middle+end
+
+
+def get_view_href(file):
+	start = '"{% '
+	end = ' %}"'
+	unspaced_view = file.replace \
+	("-", "_").replace(" ", "_").replace("/", "").replace(".html", "")
+	
+	middle = f"url 'main:{unspaced_view}'"
+	return start+middle+end
+
+
+
+
+
+if __name__ == "__main__":
+	# get_static_link
+	print(get_view_href("/abous.html/"))

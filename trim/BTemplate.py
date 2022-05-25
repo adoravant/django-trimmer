@@ -1,8 +1,9 @@
-from DProject import DProject
+
 import os
 import shutil
 from collections import OrderedDict
 from bs4 import BeautifulSoup
+from utils import *
 
 class BTemplate(object):
 	root = None
@@ -11,6 +12,10 @@ class BTemplate(object):
 	def __init__(self, template, project):
 		self.template = template
 		self.project = project
+		self.send_main_js()
+		self.send_main_css()
+		self.send_main_img()
+		self.send_main_html()
 
 	def send_main_html(self):
 		html = []
@@ -23,7 +28,7 @@ class BTemplate(object):
 						os.path.getsize(f"{os.path.join(root, name)}"):
 							pass
 						else:
-							os.remove(f"{project}/main/templates/main/{name}")
+							os.remove(f"{self.project}/main/templates/main/{name}")
 							shutil.copy(f"{os.path.join(root, name)}", f"{self.project}/main/templates/main/{name}")
 			
 					else:
@@ -141,10 +146,36 @@ class BTemplate(object):
 
 
 
-if __name__ == "__main__":
-	btemplate = BTemplate(template="Company", project="myproject")
-	print(btemplate.send_main_js())
-	print(btemplate.send_main_img())
-	print(btemplate.send_main_html())
-	print(btemplate.send_main_css())
+	def send_base_html(self):
+		with open("new_base.html", 'w') as base:
+			soup = BeautifulSoup(open(f"{self.project}/main/templates/main/index.html"), features="html.parser")
+			head = soup.find("head")
+			for link in head.find_all("link"):
+				if link["href"].endswith(("css", "png", "jpg", "gif", "svg", "jpeg")):
+					file = link["href"].split("/")[-1:][0]
+					link["href"] = get_static_link(file=file, folder="css")
+
+			base.write(str(head))
+			base.write("\n\n<body>\n\n")
+			base.write("{% include 'partials/header.html' %}\n\n")
+
+			for page in self.send_main_html():
+				base.write(f"{block(page)}")
+				base.write("\t{% endblock %}\n\n")
+
+			base.write("\n{% include 'partials/footer.html' %}\n")
+			base.write("\n <!-- Javascript Files -->\n")
+			for script in soup.find_all("script"):
+				if (script["src"].endswith(".js")) and ("https" not in script['src']):
+					file = script["src"].split("/")[-1:][0]
+					script["src"] = get_static_link(file=file, folder="js")
+				base.write(f"{str(script)}\n")	
+			base.write("</body>")	
+		
+		with open(f"{self.project}/main/templates/base.html", 'w') as base2:
+			with open("new_base.html", 'r') as new_base:
+				new_base_text = new_base.read()
+				new_base_text = new_base_text.replace("&quot;", "")
+				base2.write(new_base_text)
+
 
