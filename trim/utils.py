@@ -122,7 +122,26 @@ def get_settings_static_append_text():
 	append_text += "\t]"
 	return append_text	
 
-	
+def get_folders(rootdir=None):
+	folders = []
+	if rootdir == None:
+		rootdir = f"{os.getcwd()}/__BOOTSTRAP"
+	try:
+		for file in os.listdir(rootdir):
+			d = os.path.join(rootdir, file)
+			if os.path.isdir(d):
+				d = d.split("\\")[-1:][0]
+				folders.append(d)
+	except FileNotFoundError as err:
+		print(f"\n<<GOMA no la existe plantilla '{rootdir.split('/')[1]}' !!!!! >>\n")
+		print(f"\n<<GOMA no la existe plantilla '{rootdir.split('/')[1]}' !!!!! >>\n")
+		print(f"\n<<GOMA no la existe plantilla '{rootdir.split('/')[1]}' !!!!! >>\n")
+		print(f"\n<<GOMA no la existe plantilla '{rootdir.split('/')[1]}' !!!!! >>\n")
+		raise SystemExit(err)
+	#return withdout .git folder		
+	return folders[1:]
+
+
 
 if __name__ == "__main__":
 	# get_static_link

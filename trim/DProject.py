@@ -1,4 +1,5 @@
 import os
+from glob import glob
 import shutil
 from bs4 import BeautifulSoup
 from collections import OrderedDict
@@ -49,8 +50,16 @@ class DProject(object):
 		"""returns list of unduplicaded section ids in main pages"""
 		sections = []
 		for page in self.pages:
+			page_sections = []
+			renamed = []
 			soup = BeautifulSoup(open(f"{self.main_templates}{page}"), features="html.parser")
-			page_sections = [ a['id'] for a in soup.find_all("section") ]
+			for section_div in soup.find_all("section"):
+				try:
+					page_sections.append(section_div['id'])
+				except:
+					section_div['id'] = section_div['class'][0] 
+					page_sections.append(section_div['id'])
+					renamed.append(section_div['id'])		
 			sections += page_sections
 		sections += ["header", "footer"]	
 		sections = list(OrderedDict.fromkeys(sections))
@@ -95,6 +104,10 @@ class DProject(object):
 
 	def prepare_project(self):
 		#start project / app
+		start_path = os.getcwd()
+		#check if template exists
+		check_is_folder = get_folders(f"__BOOTSTRAP/{self.root.title()}")
+		#create project
 		os.system(f"django-admin startproject {self.root}")
 		os.chdir(self.root)
 		os.system(f"python manage.py startapp main")
@@ -105,11 +118,12 @@ class DProject(object):
 		os.chdir(os.path.join(os.getcwd(), "main"))
 		os.mkdir("templates")
 		[os.mkdir(a) for a in ["templates/main", "templates/partials", "templates/original"]] 
-
+		os.chdir(start_path)
 
 
 	def clean_main_templates(self):
 		sections = self.sections
+		print(f"\n-----sections found...........................\n{sections}")
 		files = self.pages	
 		for file in files:
 			soup = BeautifulSoup(open(f"{self.main_templates}{file}"), features="html.parser")
@@ -125,7 +139,7 @@ class DProject(object):
 							pass	
 						section_unspaced = section.replace(" ", "-")
 						include_text = f"\t{include_start} 'partials/{section_unspaced}.html' {include_end}\n"
-						if (section == "header"):
+						if (section == "header") or (section == "footer"):
 							comment = Comment(f'==== extended from base.html ====-')
 							section_div = section_div.replace_with(comment)
 						else:
@@ -151,6 +165,7 @@ class DProject(object):
 	def replace_img_srcs(self):
 		images = self.current_img_files
 		partials = self.partials
+		replaced = []
 		for partial in partials:
 			soup = BeautifulSoup(open(f"{self.partial_templates}{partial}"), features="html.parser")
 			img_sources = [ img for img in soup.find_all("img") ]
@@ -158,12 +173,15 @@ class DProject(object):
 				for img in img_sources:
 					if image_file in img["src"]:
 						img['src'] = get_static_link(image_file, "img")
-			print(img_sources)
+						replaced.append(img['src'])
+						
 			with open(f"{self.partial_templates}new_{partial}", "w") as new_partial:
 				new_partial.write(str(soup).replace("&quot;", ""))
 			os.remove(f"{self.partial_templates}{partial}")
 			shutil.move(f"{self.partial_templates}new_{partial}", f"{self.partial_templates}{partial}")
+		print(f"\n-----img src replaced...........................\n{replaced}")
 			
+	
 	def move_unclean_to_original(self):
 		pages = self.pages
 		for page in pages:
@@ -272,25 +290,28 @@ class DProject(object):
 		os.remove(f"{self.root}/{self.root}/settings.py")		
 		os.rename(f"{self.root}/{self.root}/new_settings.py", f"{self.root}/{self.root}/settings.py")	
 
-
 if __name__ == "__main__":
-	start_path = os.getcwd()
-	new_project_name = input("que nombre le pones al proyecto\n")
-	project = DProject(root=new_project_name)
-	project.prepare_project()
-	os.chdir(start_path)
-	btemplate = BTemplate(template="Company", project=f"{project.root}")
-	project.add_views()
-	project.add_urls()
-	project.add_static_to_settings()
-	project.send_partials()
-	project.clean_main_templates()
-	btemplate.send_base_html()
-	project.replace_img_srcs()
-	project.move_unclean_to_original()
-	project.replace_img_and_page_href()
 
-	print("_____________________________________________________________________")
+	# template_name = input(f"{get_folders()}\n\n\n ¿ \
+	# Que plantilla quieres usar para el proyecto ?\n")
+	
+	templates = get_folders()
+	for template_name in templates:
+		print("--------------------------------", template_name, "--------------------------")
+		project = DProject(root=template_name.lower())	
+		project.prepare_project()
+		btemplate = BTemplate(template=f"{template_name.title()}", project=f"{project.root}")
+		project.add_views()
+		project.add_urls()
+		project.add_static_to_settings()
+		project.send_partials()
+		project.clean_main_templates()
+		btemplate.send_base_html()
+		project.replace_img_srcs()
+		project.move_unclean_to_original()
+		project.replace_img_and_page_href()
+
+	#print("_____________________________________________________________________")
 	# for a in dir(project):
 	# 	if str(a).startswith("__") == False:
 	# 		sleep(3	)

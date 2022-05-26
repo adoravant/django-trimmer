@@ -10,7 +10,7 @@ class BTemplate(object):
 	project = None
 	
 	def __init__(self, template, project):
-		self.template = template
+		self.template = f"__BOOTSTRAP/{template}"
 		self.project = project
 		self.send_main_js()
 		self.send_main_css()
@@ -72,7 +72,7 @@ class BTemplate(object):
 		for root, dirs, files in os.walk(self.template, topdown=False):
 			for name in files:
 				pass
-				if name.endswith("js") and name in required_js:
+				if (name.endswith("js") and name in required_js) or (name.endswith("js.map")):
 					if os.path.exists(f"{self.project}/static/js/{name}") == True:
 						if os.path.getsize(f"{self.project}/static/js/{name}") >= \
 						os.path.getsize(f"{os.path.join(root, name)}"):
@@ -84,8 +84,8 @@ class BTemplate(object):
 			
 					else:
 						shutil.copy(f"{os.path.join(root, name)}", f"{self.project}/static/js/{name}")							
-		print(required_js)			
-
+		print(f"\n-----jss found...........................\n{required_js}")			
+		return required_js
 
 
 	def send_main_css(self):
@@ -106,8 +106,8 @@ class BTemplate(object):
 			
 					else:
 						shutil.copy(f"{os.path.join(root, name)}", f"{self.project}/static/css/{name}")							
-		print(required_css)		
-
+		print(f"\n-----css found...........................\n{required_css}")		
+		return required_css
 
 
 	@property
@@ -154,31 +154,50 @@ class BTemplate(object):
 				if link["href"].endswith(("css", "png", "jpg", "gif", "svg", "jpeg")):
 					file = link["href"].split("/")[-1:][0]
 					link["href"] = get_static_link(file=file, folder="css")
+			
+
+			boxicons_cdn  = "\n<link href='https://unpkg.com/boxicons@2.1.2/css/boxicons.min.css' rel='stylesheet'>"
+			boxicons_link =  BeautifulSoup(boxicons_cdn, features="html.parser")		
+			head.insert(0, boxicons_link)
+			
+			bootstrap_icon_cdn = "\n<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.3/font/bootstrap-icons.css'>"
+			bootstrap_icon_link =  BeautifulSoup(bootstrap_icon_cdn, features="html.parser")	
+			head.insert(0, bootstrap_icon_link)
+			
+
+			remixicons_cdn  = "\n<link href='https://cdn.jsdelivr.net/npm/remixicon@2.2.0/fonts/remixicon.css' rel='stylesheet'>"
+			remixicons_link =  BeautifulSoup(remixicons_cdn, features="html.parser")		
+			head.insert(0, remixicons_link)
+
+
 
 			title = head.find("title")
 			title.extract()
 			base.write("{% load static %}\n\n")
 			base.write(str(head))
 			base.write("\n\n<body>\n\n")
-			base.write('{% include "partials/header.html" %}\n\n')
+			base.write("{% include 'partials/header.html' %}\n\n")
 
 			for page in self.send_main_html():
 				base.write(f"{block(page)}")
 				base.write("\t{% endblock %}\n\n")
 
-			#base.write("{% include 'partials/footer.html' %}\n\n")
+			base.write("{% include 'partials/footer.html' %}\n\n")
 			base.write("\n <!-- Javascript Files -->\n")
 			for script in soup.find_all("script"):
 				if (script["src"].endswith(".js")) and ("https" not in script['src']):
 					file = script["src"].split("/")[-1:][0]
 					script["src"] = get_static_link(file=file, folder="js")
-				base.write(f"{str(script)}\n")	
+				base.write(f"\t{str(script)}\n")	
+			
+			#base.write("\t<script src='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js' integrity='sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM' crossorigin='anonymous'></script>\n")
 			base.write("</body>")	
+			
 		
-		with open(f"{self.project}/main/templates/base.html", 'w') as base2:
-			with open("new_base.html", 'r', encoding='utf-8', errors='ignore') as new_base:
+		with open(f"{self.project}/main/templates/base.html", 'w', encoding="utf-8") as base2:
+			with open("new_base.html", 'r') as new_base:
 				new_base_text = new_base.read()
 				new_base_text = new_base_text.replace("&quot;", "")
+				new_base_text = new_base_text.replace("{% include 'partials/footer.html' %}", "")
 				base2.write(new_base_text)
-
 		os.remove("new_base.html")		
