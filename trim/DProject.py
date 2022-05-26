@@ -125,7 +125,7 @@ class DProject(object):
 							pass	
 						section_unspaced = section.replace(" ", "-")
 						include_text = f"\t{include_start} 'partials/{section_unspaced}.html' {include_end}\n"
-						if (section == "header") or (section == "footer"):
+						if (section == "header"):
 							comment = Comment(f'==== extended from base.html ====-')
 							section_div = section_div.replace_with(comment)
 						else:
@@ -136,12 +136,14 @@ class DProject(object):
 					logging.error(traceback.format_exc())
 					pass
 
+
 			with open(f"{self.main_templates}new_{file}", "w") as new_page_html:
 				new_page_html.write(extends_base)
 				new_page_html.write(load_static)
 				new_page_html.write(block(file))
+				new_page_html.write("\n<head>\n\t<title>{{ page_title }}</title>\n</head>")
 				soup = soup.prettify()
-				new_page_html.write(str(soup))	
+				new_page_html.write(str(soup).replace('<html lang="en">', '').replace("<!DOCTYPE html>", "").replace("</html>", ""))	
 				new_page_html.write(endblock)
 
 
@@ -167,11 +169,108 @@ class DProject(object):
 		for page in pages:
 			if page.startswith("new_") == False:
 				shutil.move(f"{self.main_templates}{page}", f"{self.main}templates/original/{page}")
-			
 		for page in pages:
 			if page.startswith("new_"):
 				os.rename( f"{self.main_templates}{page}", f"{self.main_templates}{page.replace('new_', '')}")
 
+		os.rename(f"{self.main_templates}new_index.html", f"{self.main_templates}index.html" )		
+
+
+
+	def add_views(self):
+		"""create simple views for all main html pages"""
+		files = self.pages
+		for file in files:
+			with open(f"{self.views}", "a+") as views_py:
+				function_text = get_view_text(file)
+				views_py.write(function_text)
+			
+		
+
+	def add_urls(self):
+		"""create urls paths for main html pages"""
+		files = self.pages
+		with open(f"{self.urls}", "a+") as urls_py:
+			urls_py.write("from django.urls import path\n")
+			urls_py.write("from main import views\n\n\n")
+			urls_py.write("#add your url patters here :)\n\n\n")
+			urls_py.write(f"app_name = 'main'\n")
+			urls_py.write("urlpatterns = [ \n\n")
+
+			urls_text = f"path('', views.index, name='index'),\n"
+			urls_py.write(f"\t{urls_text}")
+			
+			for file in files:
+				if file != "index.html":
+					urls_text = get_urls_text(file)
+					urls_py.write(f"\t{urls_text}")
+			
+			urls_py.write("\n\n\t\t\t]")
+
+		with open(f"{self.root}/{self.root}/urls.py", "r") as old_url:
+			old_url = old_url.read()
+			old_url = old_url.replace("from django.urls import path", "from django.urls import path, include")
+			old_url = old_url.replace("path('admin/', admin.site.urls),", \
+				"path('admin/', admin.site.urls),\npath('', include('main.urls')),")
+		
+		with open(f"{self.root}/{self.root}/new_urls.py", "w") as new_url:
+			new_url.write(old_url)
+
+		os.remove(f"{self.root}/{self.root}/urls.py")
+		os.rename(f"{self.root}/{self.root}/new_urls.py", f"{self.root}/{self.root}/urls.py")	
+	
+
+
+
+
+
+	def replace_img_and_page_href(self):
+		changed = []
+		img_files = self.current_img_files
+
+		for file in self.partials:
+			soup = BeautifulSoup(open(f"{self.partial_templates}{file}"), features="html.parser")
+			links = [link for link in soup.find_all("a")]
+			for link in links:
+				
+				#change page link "x.html" >>> {% url 'main:x' %}
+				try:
+					if link['href'] in self.pages:
+						link['href'] = get_view_href(file=link['href'])
+						change.append(link)
+				except:
+					pass
+				
+				#change img link "..assets/x.png" >>> {% static 'img/x.png' %}
+				for img in img_files:
+					try:
+						if img in link['href']:
+							link['href'] = get_static_link(file=img, folder="img")
+							change.append(link)	
+
+					except:
+						pass
+
+			#delete old and write new file			
+			soup = str(soup).replace("&quot;", "")
+			os.remove(f"{self.partial_templates}{file}")
+			with open(f"{self.partial_templates}{file}", "w") as new_file:
+				new_file.write(soup)		
+
+		return changed
+
+
+	def add_static_to_settings(self):
+		with open(f"{self.root}/{self.root}/settings.py", "a") as settings_py:
+			settings_py.write(get_settings_static_append_text())	
+
+		with open(f"{self.root}/{self.root}/settings.py", "r") as settings_py:	
+			old_settings = settings_py.read()
+			old_settings = old_settings.replace("'django.contrib.staticfiles',", "'django.contrib.staticfiles',\n'main',\n")
+			with open(f"{self.root}/{self.root}/new_settings.py", "w") as new_settings:
+				new_settings.write(old_settings)
+		os.remove(f"{self.root}/{self.root}/settings.py")		
+		os.rename(f"{self.root}/{self.root}/new_settings.py", f"{self.root}/{self.root}/settings.py")	
 
 
 if __name__ == "__main__":
@@ -181,11 +280,16 @@ if __name__ == "__main__":
 	project.prepare_project()
 	os.chdir(start_path)
 	btemplate = BTemplate(template="Company", project=f"{project.root}")
+	project.add_views()
+	project.add_urls()
+	project.add_static_to_settings()
 	project.send_partials()
 	project.clean_main_templates()
 	btemplate.send_base_html()
 	project.replace_img_srcs()
 	project.move_unclean_to_original()
+	project.replace_img_and_page_href()
+
 	print("_____________________________________________________________________")
 	# for a in dir(project):
 	# 	if str(a).startswith("__") == False:

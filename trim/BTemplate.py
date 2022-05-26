@@ -131,7 +131,7 @@ class BTemplate(object):
 		for root, dirs, files in os.walk(self.template, topdown=False):
 			for name in files:
 				pass
-				if name.endswith(("svg", "png", "jpg", "jpeg", "gif")) and name in required_img:
+				if name.endswith(("svg", "png", "jpg", "jpeg", "gif")):
 					if os.path.exists(f"{self.project}/static/img/{name}") == True:
 						if os.path.getsize(f"{self.project}/static/img/{name}") >= \
 						os.path.getsize(f"{os.path.join(root, name)}"):
@@ -155,15 +155,18 @@ class BTemplate(object):
 					file = link["href"].split("/")[-1:][0]
 					link["href"] = get_static_link(file=file, folder="css")
 
+			title = head.find("title")
+			title.extract()
+			base.write("{% load static %}\n\n")
 			base.write(str(head))
 			base.write("\n\n<body>\n\n")
-			base.write("{% include 'partials/header.html' %}\n\n")
+			base.write('{% include "partials/header.html" %}\n\n')
 
 			for page in self.send_main_html():
 				base.write(f"{block(page)}")
 				base.write("\t{% endblock %}\n\n")
 
-			base.write("\n{% include 'partials/footer.html' %}\n")
+			#base.write("{% include 'partials/footer.html' %}\n\n")
 			base.write("\n <!-- Javascript Files -->\n")
 			for script in soup.find_all("script"):
 				if (script["src"].endswith(".js")) and ("https" not in script['src']):
@@ -173,9 +176,9 @@ class BTemplate(object):
 			base.write("</body>")	
 		
 		with open(f"{self.project}/main/templates/base.html", 'w') as base2:
-			with open("new_base.html", 'r') as new_base:
+			with open("new_base.html", 'r', encoding='utf-8', errors='ignore') as new_base:
 				new_base_text = new_base.read()
 				new_base_text = new_base_text.replace("&quot;", "")
 				base2.write(new_base_text)
 
-
+		os.remove("new_base.html")		
