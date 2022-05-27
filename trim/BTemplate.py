@@ -147,7 +147,7 @@ class BTemplate(object):
 
 
 	def send_base_html(self):
-		with open("new_base.html", 'w') as base:
+		with open("new_base.html", "w", encoding="utf-8") as base:
 			soup = BeautifulSoup(open(f"{self.project}/main/templates/main/index.html"), features="html.parser")
 			head = soup.find("head")
 			for link in head.find_all("link"):
@@ -194,8 +194,8 @@ class BTemplate(object):
 			base.write("</body>")	
 			
 		
-		with open(f"{self.project}/main/templates/base.html", 'w', encoding="utf-8") as base2:
-			with open("new_base.html", 'r') as new_base:
+		with open(f"{self.project}/main/templates/base.html", "w", encoding="utf-8") as base2:
+			with open("new_base.html", "r", encoding="utf-8") as new_base:
 				new_base_text = new_base.read()
 				new_base_text = new_base_text.replace("&quot;", "")
 				new_base_text = new_base_text.replace("{% include 'partials/footer.html' %}", "")

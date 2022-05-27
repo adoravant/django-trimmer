@@ -1,10 +1,19 @@
 import os
+from chardet import detect
+
 extends_base = "{% extends 'base.html' %}\n\n"
 load_static = "{% load static %}\n\n"
 start_block = "{% block index %}\n\n"
 endblock = "\n\n{% endblock %}"
 include_start = "{% include"
 include_end = " %}"
+
+
+
+def get_encode_type(file):
+	with open(file, 'rb') as f:
+		rawdata = f.read()
+	return detect(rawdata)['encoding']
 
 
 def block(html_page):
@@ -143,6 +152,7 @@ def get_folders(rootdir=None):
 
 
 
-if __name__ == "__main__":
-	# get_static_link
-	print(get_view_href("/abous.html/"))
+# if __name__ == "__main__":
+# 	# get_static_link
+# 	x = get_encode_type("C:/Users/Abrahan/Desktop/django-trimmer/trim/__DJANGO/ebusiness/testt/main/views.py")
+# 	print(x)
