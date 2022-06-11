@@ -1,9 +1,9 @@
-
 import os
 import shutil
 from collections import OrderedDict
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Comment
 from utils import *
+from time import sleep
 
 class BTemplate(object):
 	root = None
@@ -16,7 +16,20 @@ class BTemplate(object):
 		self.send_main_css()
 		self.send_main_img()
 		self.send_main_html()
+		self.send_base_html()
 
+	
+	@property
+	def main_html_files(self):
+		html = []
+		for root, dirs, files in os.walk(self.template, topdown=False):
+			for name in files:
+				if name.endswith("html"):
+					html.append(name)		
+		pages = list(OrderedDict.fromkeys(html))			
+		return pages			
+
+	
 	def send_main_html(self):
 		html = []
 		for root, dirs, files in os.walk(self.template, topdown=False):
@@ -42,7 +55,7 @@ class BTemplate(object):
 		"""returns a list of unduplicated .css files called in main hml pages"""
 		required_css_files = []
 		for html in self.send_main_html():
-			soup = BeautifulSoup(open(f"{self.project}/main/templates/main/{html}"), features="html.parser")
+			soup = BeautifulSoup(open(f"{self.project}/main/templates/main/{html}", "rb"), features="html.parser", from_encoding="utf-8")
 			# print(f"{self.partial_templates}{html}")
 			required_css_files += [ a["href"].split("/")[-1:][0] for a in \
 			soup.find_all("link") if a['href'].endswith("css") ]
@@ -51,13 +64,12 @@ class BTemplate(object):
 
 
 
-
 	@property
 	def required_js_files(self):
 		"""returns a list of unduplicated .css files called in main hml pages"""
 		required_js_files = []
 		for html in self.send_main_html():
-			soup = BeautifulSoup(open(f"{self.project}/main/templates/main/{html}"), features="html.parser")
+			soup = BeautifulSoup(open(f"{self.project}/main/templates/main/{html}", "rb"), features="html.parser", from_encoding="utf-8")
 			# print(f"{self.partial_templates}{html}")
 			required_js_files += [ a["src"].split("/")[-1:][0] for a in \
 			soup.find_all("script") if a['src'].endswith(".js") ]
@@ -76,15 +88,18 @@ class BTemplate(object):
 					if os.path.exists(f"{self.project}/static/js/{name}") == True:
 						if os.path.getsize(f"{self.project}/static/js/{name}") >= \
 						os.path.getsize(f"{os.path.join(root, name)}"):
-							print("pass", name)
 							pass
 						else:
 							os.remove(f"{self.project}/static/js/{name}")
 							shutil.copy(f"{os.path.join(root, name)}", f"{self.project}/static/js/{name}")
-			
+							js.append(name)
 					else:
+						js.append(name)
 						shutil.copy(f"{os.path.join(root, name)}", f"{self.project}/static/js/{name}")							
-		print(f"\n-----jss found...........................\n{required_js}")			
+
+		print(f"\n\n-----js sent...........................\n{len(js)}")			
+
+		
 		return required_js
 
 
@@ -93,29 +108,30 @@ class BTemplate(object):
 		required_css = self.required_css_files
 		for root, dirs, files in os.walk(self.template, topdown=False):
 			for name in files:
-				pass
-				if name.endswith("css") and name in required_css:
+				if (name.endswith("css") and name in required_css):
 					if os.path.exists(f"{self.project}/static/css/{name}") == True:
 						if os.path.getsize(f"{self.project}/static/css/{name}") >= \
 						os.path.getsize(f"{os.path.join(root, name)}"):
-							print("pass", name)
 							pass
 						else:
 							os.remove(f"{self.project}/static/css/{name}")
 							shutil.copy(f"{os.path.join(root, name)}", f"{self.project}/static/css/{name}")
-			
+							css.append(name)
 					else:
+						css.append(name)
 						shutil.copy(f"{os.path.join(root, name)}", f"{self.project}/static/css/{name}")							
-		print(f"\n-----css found...........................\n{required_css}")		
-		return required_css
+	
+		print(f"\n-----css sent...........................\n{len(css)}\n")			
 
+		return css
+		
 
 	@property
 	def required_img_files(self):
 		"""returns a list of unduplicated .css files called in main hml pages"""
 		required_img_files = []
 		for html in self.send_main_html():
-			soup = BeautifulSoup(open(f"{self.project}/main/templates/main/{html}"), features="html.parser")
+			soup = BeautifulSoup(open(f"{self.project}/main/templates/main/{html}", "rb"), features="html.parser", from_encoding="utf-8")
 			# print(f"{self.partial_templates}{html}")
 			required_img_files += [ a["src"].split("/")[-1:][0] for a in \
 			soup.find_all("img") if a['src'].endswith(("jpg", "png", "svg", "gif", "jpeg")) ]
@@ -123,62 +139,67 @@ class BTemplate(object):
 		return required_img_files		
 
 
-
-
 	def send_main_img(self):
 		img = []
 		required_img = self.required_img_files
+		print("-----------duplicated images ? ...........\n")
 		for root, dirs, files in os.walk(self.template, topdown=False):
 			for name in files:
-				pass
 				if name.endswith(("svg", "png", "jpg", "jpeg", "gif")):
 					if os.path.exists(f"{self.project}/static/img/{name}") == True:
 						if os.path.getsize(f"{self.project}/static/img/{name}") >= \
 						os.path.getsize(f"{os.path.join(root, name)}"):
-							print("pass", name)
+							print(f"duplicated image found: '{name}'")
 							pass
 						else:
 							os.remove(f"{self.project}/static/img/{name}")
 							shutil.copy(f"{os.path.join(root, name)}", f"{self.project}/static/img/{name}")
-			
+							img.append(name)
 					else:
+						img.append(name)
 						shutil.copy(f"{os.path.join(root, name)}", f"{self.project}/static/img/{name}")	
-
-
+	
+		print(f"\n-----img files sent...........................\n{len(img)}\n")					
 
 	def send_base_html(self):
 		with open("new_base.html", "w", encoding="utf-8") as base:
-			soup = BeautifulSoup(open(f"{self.project}/main/templates/main/index.html"), features="html.parser")
+			soup = BeautifulSoup(open(f"{self.project}/main/templates/main/index.html", "rb"), features="html.parser", from_encoding="utf-8")
 			head = soup.find("head")
-			for link in head.find_all("link"):
-				if link["href"].endswith(("css", "png", "jpg", "gif", "svg", "jpeg")):
-					file = link["href"].split("/")[-1:][0]
-					link["href"] = get_static_link(file=file, folder="css")
+			links_to_comment = ["remixicon", "boxicons", "bootstrap-icons"]
 			
+			for link in head.find_all("link"):
+				file = link["href"].split("/")[-1:][0]
+				
+				if file.endswith(".css"):
+					link['href'] = f'{get_static_link(file=file, folder="css")}'					
+					
+					if any(map(file.__contains__, links_to_comment)):
+						link = link.replace_with(Comment(str(link)))					
+	
+				elif file.endswith(("png", "jpg", "jpeg", "svg", "gif")):
+					link["href"] = get_static_link(file=file, folder="img")
 
 			boxicons_cdn  = "\n<link href='https://unpkg.com/boxicons@2.1.2/css/boxicons.min.css' rel='stylesheet'>"
 			boxicons_link =  BeautifulSoup(boxicons_cdn, features="html.parser")		
-			head.insert(0, boxicons_link)
-			
 			bootstrap_icon_cdn = "\n<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.3/font/bootstrap-icons.css'>"
 			bootstrap_icon_link =  BeautifulSoup(bootstrap_icon_cdn, features="html.parser")	
-			head.insert(0, bootstrap_icon_link)
-			
-
 			remixicons_cdn  = "\n<link href='https://cdn.jsdelivr.net/npm/remixicon@2.2.0/fonts/remixicon.css' rel='stylesheet'>"
 			remixicons_link =  BeautifulSoup(remixicons_cdn, features="html.parser")		
-			head.insert(0, remixicons_link)
-
-
-
+			
+			head.append(Comment("bootstrap icon | remixicon | boxicon CDNs"))
+			head.append(boxicons_link)
+			head.append(remixicons_link)
+			head.append(bootstrap_icon_link)
+			
 			title = head.find("title")
 			title.extract()
+
 			base.write("{% load static %}\n\n")
 			base.write(str(head))
 			base.write("\n\n<body>\n\n")
 			base.write("{% include 'partials/header.html' %}\n\n")
 
-			for page in self.send_main_html():
+			for page in self.main_html_files:
 				base.write(f"{block(page)}")
 				base.write("\t{% endblock %}\n\n")
 
@@ -198,6 +219,10 @@ class BTemplate(object):
 			with open("new_base.html", "r", encoding="utf-8") as new_base:
 				new_base_text = new_base.read()
 				new_base_text = new_base_text.replace("&quot;", "")
-				new_base_text = new_base_text.replace("{% include 'partials/footer.html' %}", "")
 				base2.write(new_base_text)
 		os.remove("new_base.html")		
+
+
+if __name__ == "__main__":
+	print("aca no es!, ABRIR run_single.py o run_all.py")
+	sleep(5)

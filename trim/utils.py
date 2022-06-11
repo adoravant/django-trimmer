@@ -1,12 +1,13 @@
 import os
 from chardet import detect
+from time import sleep
 
 extends_base = "{% extends 'base.html' %}\n\n"
 load_static = "{% load static %}\n\n"
 start_block = "{% block index %}\n\n"
 endblock = "\n\n{% endblock %}"
 include_start = "{% include"
-include_end = " %}"
+include_end = "%}"
 
 
 
@@ -150,9 +151,6 @@ def get_folders(rootdir=None):
 	#return withdout .git folder		
 	return folders[1:]
 
-
-
-# if __name__ == "__main__":
-# 	# get_static_link
-# 	x = get_encode_type("C:/Users/Abrahan/Desktop/django-trimmer/trim/__DJANGO/ebusiness/testt/main/views.py")
-# 	print(x)
+if __name__ == "__main__":
+	print("aca no es, ABRIR run_single.py o run_all.py")
+	sleep(4)
