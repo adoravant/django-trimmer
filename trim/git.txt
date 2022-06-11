@@ -1,0 +1,74 @@
+#PUSH UP TO DATE NOT WORKING
+git push --set-upstream origin main
+
+
+#GET A FILE FROM REMOTE (DELETED IN LOCAL MANUALY)
+git checkout "x.html"
+
+#GET ONLY A FOULDER
+mkdir <repo>
+cd <repo>
+git init
+git remote add -f origin <url>
+git config core.sparseCheckout true
+echo "some/dir/" >> .git/info/sparse-checkout
+echo "another/sub/tree" >> .git/info/sparse-checkout
+git pull origin master
+
+
+git config --global user.name "adoravant"
+git config --global user.email "adoravant@gmail.com"
+
+
+ssh-keygen -t rsa -C "adoravant@gmail.com"
+ssh -T git@github.com
+
+
+
+
+#CREATE FROM COMMANDLINE
+cho "# desk" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin git@github.com:adoravant/desk.git
+git push -u origin main
+
+
+#PUSH EXISTING
+git add -A
+git commit -m "first commit"
+git remote add origin git@github.com:adoravant/desk.git
+git branch -M main
+git push -u origin main
+
+
+#CHECK AND BRING
+$git remote show origin
+$git status -uno
+#git pull origin main
+
+
+#UPDATING ALL CHANGES
+git commit -am "changing and deleting files"
+	
+
+git add -A stages All (include new files, modified and deleted)
+git add . stages new and modified, without deleted
+git add -u stages modified and deleted, without new
+
+#RESET TRACKING
+git reset name_of_file
+
+
+#REMOVE MAIN REMOTE
+git remote rm origin
+
+del /F /S /Q /A .git
+rmdir .git
+if exist folder rmdir /Q /S folder
+
+
+
+
